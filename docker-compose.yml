@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # PostgreSQL - Core database for paper-trail
+  postgres:
+    image: postgres:16-alpine
+    container_name: antimony-postgres
+    environment:
+      POSTGRES_DB: paper_trail
+      POSTGRES_USER: antimony
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./paper-trail/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - antimony-net
+
+  # Redis - Inter-LLM communication & caching
+  redis:
+    image: redis:7-alpine
+    container_name: antimony-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - antimony-net
+
+  # Qdrant - Vector database for semantic search
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: antimony-qdrant
+    volumes:
+      - ./data/qdrant:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    restart: unless-stopped
+    networks:
+      - antimony-net
+
+  # Gitea - Self-hosted Git server
+  gitea:
+    image: gitea/gitea:latest
+    container_name: antimony-gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=postgres:5432
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=antimony
+      - GITEA__database__PASSWD=${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - ./data/gitea:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3000:3000"
+      - "2222:22"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - antimony-net
+
+  # IPFS - Decentralized file storage
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: antimony-ipfs
+    environment:
+      - IPFS_PATH=/data/ipfs
+    volumes:
+      - ./data/ipfs:/data/ipfs
+    ports:
+      - "4001:4001"
+      - "5001:5001"
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - antimony-net
+
+  # Paper-trail API - Main application server
+  api:
+    build: ./services/api
+    container_name: antimony-api
+    environment:
+      - DATABASE_URL=postgresql://antimony:${POSTGRES_PASSWORD:-changeme}@postgres:5432/paper_trail
+      - REDIS_URL=redis://redis:6379
+      - QDRANT_URL=http://qdrant:6333
+      - GITEA_URL=http://gitea:3000
+      - IPFS_URL=http://ipfs:5001
+      - HPC_HOST=10.0.0.205
+      - HPC_USER=curious
+    volumes:
+      - ./data/artifacts:/app/artifacts
+      - ~/.ssh:/root/.ssh:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+      - qdrant
+      - gitea
+      - ipfs
+    restart: unless-stopped
+    networks:
+      - antimony-net
+
+networks:
+  antimony-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:
+  gitea_data:
+  ipfs_data:

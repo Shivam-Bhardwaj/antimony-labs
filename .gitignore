@@ -1,0 +1,55 @@
+# Environment
+.env
+.env.local
+.credentials
+
+# Data directories (persistent volumes)
+data/
+*.db
+*.sqlite
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+
+# External projects
+autocrate/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Secrets
+*.pem
+*.key
+private/
+secrets/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

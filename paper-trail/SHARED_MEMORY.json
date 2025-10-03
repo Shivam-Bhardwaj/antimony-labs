@@ -1,0 +1,58 @@
+{
+  "last_updated": "2025-10-03T02:50:27Z",
+  "last_llm": "codex",
+  "infrastructure": {
+    "rpi5": {
+      "role": "edge-proxy",
+      "ssl": "cloudflare full (self-signed origin)",
+      "services": ["nginx", "docker-stack", "pm2-console", "wireguard"],
+      "notes": "Meshnet unreliable; fallback WireGuard server online",
+      "remote_access": {
+        "wireguard": {
+          "interface": "wg0",
+          "endpoint": "185.80.115.7:51820",
+          "server_ip": "10.6.0.1/24",
+          "peer_devices": [
+            {
+              "name": "iphone",
+              "address": "10.6.0.2/32",
+              "public_key": "LFHEgJQ1R8vN/q7ffOtkp9NWmZxPt1y+6Vky0r6sLHE="
+            }
+          ],
+          "todo": [
+            "Portal/phone must install WireGuard app",
+            "Router: forward UDP/51820 → 10.0.0.207",
+            "Use QR from /root/wireguard-iphone.conf"
+          ]
+        },
+        "nord_meshnet": {
+          "status": "disabled",
+          "note": "Meshnet sunset 2025-12-01"
+        }
+      }
+    },
+    "hpc": {
+      "status": "configured",
+      "services": ["task-worker", "autocrate-dev"],
+      "database_connection": "connected to RPi5",
+      "workspace": "/home/curious/antimony-workspace"
+    }
+  },
+  "completed_tasks": [
+    {
+      "task": "Set up HPC as compute server",
+      "completed_by": "codex",
+      "status": "working"
+    },
+    {
+      "task": "Switch RPi5 SSL to Cloudflare edge",
+      "completed_by": "codex",
+      "status": "done"
+    },
+    {
+      "task": "Publish antimony-labs.org landing page",
+      "completed_by": "codex",
+      "status": "working"
+    }
+  ]
+}
