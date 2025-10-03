@@ -60,6 +60,17 @@ sudo ufw enable
 
 Optional: enable unattended upgrades for automatic security patches.
 
+### Quick Bootstrap Script
+
+Once you have `antimony-labs` cloned on the key Pi, you can automate most of the remaining configuration with:
+
+```bash
+cd ~/workspace/antimony-labs
+sudo ./scripts/setup-key-rpi.sh
+```
+
+The script creates/updates the `curious` user, locks the default `pi` account, installs the base packages (git, curl, ufw, fail2ban, python3, ansible), configures the firewall, and scaffolds an Ansible workspace at `~/workspace/ops` with starter inventory and playbook files. Review the summary the script prints, then update the generated `inventory.ini` with the real LAN or WireGuard addresses before running any playbooks.
+
 ## 4. WireGuard / Tailscale Access
 
 Choose one secure overlay so the key Pi is reachable from anywhere.
