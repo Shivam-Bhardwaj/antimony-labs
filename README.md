@@ -17,7 +17,9 @@ Paper-Trail is the "brain" of Antimony Labs - a system that:
 ```
 User (plain English)
     ↓
-antimony-labs.org (RPi5)
+xps2018 (10.0.0.109) - Web UI
+    ↓
+antimony-labs.org (RPi5 - 10.0.0.207)
     ├─ Claude Code (planning, reasoning)
     ├─ Codex (code generation)
     └─ Paper-Trail API
@@ -29,6 +31,34 @@ HPC Server (10.0.0.205)
     ├─ Codex (heavy code gen)
     └─ Compute workers
 ```
+
+## 🖥️ Infrastructure
+
+### Network Topology (Multi-Server HA)
+
+**Web Tier** (Load Balanced):
+- **xps2018** (10.0.0.109) - Primary web server
+  - Console UI (Next.js)
+  - 32GB RAM, x86_64, Ubuntu 24.04
+  - User-facing web interface
+
+- **RPi/sbl1** (10.0.0.174) - Backup web server
+  - Console UI (Next.js)
+  - 7.7GB RAM, ARM64, Armbian
+  - Automatic failover (< 1 second)
+  - Cloudflare Tunnel load balancing
+
+**Backend Tier**:
+- **RPi5** (10.0.0.207) - Backend services
+  - PostgreSQL, Redis, Qdrant, Gitea, IPFS
+  - Paper-Trail API
+  - LLM coordinators (claude-rpi5, codex-rpi5)
+
+**Compute Tier**:
+- **HPC** (10.0.0.205) - Heavy compute
+  - LLM coordinators (claude-hpc, codex-hpc)
+  - Resource-intensive analysis
+  - 50% allocated (16 cores, 16GB RAM)
 
 ## 📦 Components
 
@@ -80,6 +110,42 @@ cd ~/antimony-labs
 python3 scripts/llm-coordinator.py claude-hpc &
 python3 scripts/llm-coordinator.py codex-hpc &
 ```
+
+### On xps2018 (10.0.0.109) - Primary Web Server
+
+```bash
+# Deploy from RPi5 (recommended)
+cd /root/antimony-labs
+./scripts/deploy-to-xps2018.sh
+# Choose: Console UI only
+
+# Deploys to /var/www/antimony-labs.com
+# Access at: http://10.0.0.109
+```
+
+### On RPi/sbl1 (10.0.0.174) - Backup Web Server
+
+```bash
+# Option 1: Sync from xps2018 (fast)
+ssh curious@10.0.0.109
+cd /root/antimony-labs
+./scripts/deploy-to-rpi-backup.sh
+
+# Option 2: Standalone deployment on RPi
+ssh curious@10.0.0.174
+cd /root/antimony-labs
+./scripts/deploy-to-rpi-backup.sh
+```
+
+### High Availability Setup
+
+Both web servers run behind Cloudflare Tunnel with automatic load balancing and failover:
+- 8 tunnel connections (4 per server)
+- < 1 second failover if either server fails
+- Geographic load distribution
+- SSL/TLS termination at Cloudflare edge
+
+See [XPS2018_DEPLOYMENT.md](XPS2018_DEPLOYMENT.md) for detailed deployment and HA setup.
 
 ## 📚 Database Schema
 
